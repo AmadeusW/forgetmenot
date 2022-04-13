@@ -20,16 +20,14 @@ else
     <table class="table">
         <thead>
             <tr>
-                <th>Done</th>
-                <th>Name</th>
+                <th>Task</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in checklist.Items)
             {
                 <tr>
-                    <td>@item.Done</td>
-                    <td>@item.Name</td>
+                    <td>@(item.Done ? "☑" : "⏹") @item.Name</td>
                 </tr>
             }
         </tbody>

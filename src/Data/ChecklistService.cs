@@ -1,7 +1,16 @@
 namespace forgetmenot.Data;
+using forgetmenot.Model;
+using Microsoft.AspNetCore.Components;
 
 public class ChecklistService
 {
+    ChecklistParser Parser {get; set;}
+
+    public ChecklistService(ChecklistParser parser)
+    {
+        this.Parser = parser;
+    }
+
     public Task<ChecklistQuickView[]> GetChecklistsAsync()
     {
         return Task.FromResult(new[] { 
@@ -18,28 +27,10 @@ public class ChecklistService
         });
     }
 
-    public Task<Checklist> GetChecklistAsync(string title)
+    public async Task<Checklist> GetChecklistAsync(string title)
     {
-        return Task.FromResult(new Checklist() 
-        {
-            Title = title,
-            Author = "n/a",
-            DateCreated = DateTime.Now,
-            Summary = "auto generated",
-            Items = new List<ChecklistItem>() {
-                new ChecklistItem() {
-                    Name = "task A",
-                    Done = true,
-                },
-                new ChecklistItem() {
-                    Name = "task B",
-                    Done = false,
-                },
-                new ChecklistItem() {
-                    Name = "task C",
-                    Done = false,
-                },
-            },
-        });
+        var rawData = await Parser.LoadAsync(title);
+        var parsed = await Parser.ParseAsync(rawData);
+        return parsed;
     }
 }
