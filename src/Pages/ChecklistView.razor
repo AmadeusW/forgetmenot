@@ -1,0 +1,49 @@
+﻿@page "/checklist/{Title}"
+
+<PageTitle>Checklist</PageTitle>
+
+@using forgetmenot.Data
+@inject ChecklistService ChecklistService
+
+@if (checklist == null)
+{
+    <h1>Loading...</h1>
+}
+else
+{
+    <h1>@checklist.Title</h1>
+    <p>
+        Created @checklist.DateCreated by @checklist.Author
+    </p>
+    <p><em>@checklist.Summary</em></p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Done</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in checklist.Items)
+            {
+                <tr>
+                    <td>@item.Done</td>
+                    <td>@item.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public string? Title {get; set;}
+
+    private Checklist? checklist;
+
+    protected override async Task OnInitializedAsync()
+    {
+        checklist = await ChecklistService.GetChecklistAsync(Title);
+    }
+}

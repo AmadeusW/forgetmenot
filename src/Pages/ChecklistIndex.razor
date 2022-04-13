@@ -1,0 +1,49 @@
+﻿@page "/checklists"
+
+<PageTitle>Checklists</PageTitle>
+
+@using forgetmenot.Data
+@inject ChecklistService ChecklistService
+
+<h1>Checklists</h1>
+
+@if (checklists == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Summary</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var checklist in checklists)
+            {
+                <tr>
+                    <td>
+                        @{
+                            var link = $"checklist/{checklist.Title}";
+                        }
+                        <NavLink class="nav-link" href="@link">
+                            @checklist.Title
+                        </NavLink>
+                    </td>
+                    <td>@checklist.Summary</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private ChecklistQuickView[]? checklists;
+
+    protected override async Task OnInitializedAsync()
+    {
+        checklists = await ChecklistService.GetChecklistsAsync();
+    }
+}
