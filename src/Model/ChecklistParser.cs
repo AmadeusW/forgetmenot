@@ -21,7 +21,7 @@ public class ChecklistParser
         int previousIndentSize = 0;
         foreach (var rawLine in serialized.Split('\n'))
         {
-            var line = rawLine.Trim();
+            var line = rawLine.TrimEnd(); // don't trim start so that we can find out line indentation
             if (string.IsNullOrEmpty(line))
             {
                 continue;
