@@ -21,9 +21,10 @@ else
             @foreach (var item in checklist.Items)
             {
                 var capturedItem = item;
+                var prefix = new string(' ' /* non breakable space u+00a0 */, item.IndentSize);
                 <tr>
                     <td @onclick="(e => ToggleItem(capturedItem))" >
-                        <span>@(item.Done ? "✅" : "⬛") @item.Name</span>
+                        <span>@prefix @(item.Done ? "✅" : item.HasChildItems ? "🔽" : "⬛") @item.Name</span>
                     </td>
                 </tr>
             }
@@ -49,7 +50,26 @@ else
 
     private void ToggleItem(ChecklistItem item)
     {
+        if (item.HasChildItems)
+        {
+            // Can't toggle these
+            return;
+        }
+
         item.Done = !item.Done;
+
+        RecursivelyUpdateParents(item);
         checklist.LastModified = DateTime.Now;
+    }
+
+    private void RecursivelyUpdateParents(ChecklistItem item)
+    {
+        if (item.ParentItem is not null)
+        {
+            item.ParentItem.Done = checklist.Items
+                .Where(n => n.ParentItem == item.ParentItem)
+                .All(n => n.Done);
+            RecursivelyUpdateParents(item.ParentItem);
+        }
     }
 }

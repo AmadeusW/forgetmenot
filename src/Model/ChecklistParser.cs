@@ -18,7 +18,6 @@ public class ChecklistParser
         Dictionary<int, ChecklistItem> lastItemAtIndent = new Dictionary<int, ChecklistItem>();
 
         var section = Section.None;
-        int previousIndentSize = 0;
         foreach (var rawLine in serialized.Split('\n'))
         {
             var line = rawLine.TrimEnd(); // don't trim start so that we can find out line indentation
@@ -59,20 +58,24 @@ public class ChecklistParser
                     var newItem = new ChecklistItem()
                     {
                         Name = itemName,
-                        Done = false,
-                        Items = new List<ChecklistItem>(),
+                        IndentSize = indentSize,
                     };
-                    
-                    if (indentSize == 0)
+
+                    if (indentSize > 0)
                     {
-                        items.Add(newItem);
+                        for (int previousIndentSize = indentSize - 1; previousIndentSize >= 0; previousIndentSize--)
+                        {
+                            if (lastItemAtIndent.TryGetValue(previousIndentSize, out var previousItem))
+                            {
+                                newItem.ParentItem = previousItem;
+                                previousItem.HasChildItems = true;
+                                break;
+                            }
+                        }
                     }
-                    if (indentSize > previousIndentSize)
-                    {
-                        lastItemAtIndent[previousIndentSize].Items.Add(newItem);
-                    }
+
                     lastItemAtIndent[indentSize] = newItem;
-                    previousIndentSize = indentSize;
+                    items.Add(newItem);
                 }
             }
         }
