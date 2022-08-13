@@ -11,27 +11,28 @@
 }
 else
 {
-    <h1>@checklist.Title</h1>
-    <p>
-        Created @checklist.DateCreated by @checklist.Author
-    </p>
-    <p><em>@checklist.Summary</em></p>
-
     <table class="table">
         <thead>
             <tr>
-                <th>Task</th>
+                <th>@checklist.Title</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var item in checklist.Items)
             {
+                var capturedItem = item;
                 <tr>
-                    <td>@(item.Done ? "☑" : "⏹") @item.Name</td>
+                    <td @onclick="(e => ToggleItem(capturedItem))" >
+                        <span>@(item.Done ? "✅" : "⬛") @item.Name</span>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+
+    <p><em>@checklist.Summary</em></p>
+    <p>Updated @checklist.LastModified by @checklist.LastModifiedBy</p>
+    <p>@status</p>
 }
 
 @code {
@@ -39,9 +40,16 @@ else
     public string? Title {get; set;}
 
     private Checklist? checklist;
+    private string status;
 
     protected override async Task OnInitializedAsync()
     {
         checklist = await ChecklistService.GetChecklistAsync(Title);
+    }
+
+    private void ToggleItem(ChecklistItem item)
+    {
+        item.Done = !item.Done;
+        checklist.LastModified = DateTime.Now;
     }
 }
