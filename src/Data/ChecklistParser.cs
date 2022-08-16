@@ -89,39 +89,4 @@ public class ChecklistParser
         Header,
         List
     }
-
-    private const string SampleData = @"
-# Leaving on vacation
-
-Checklist for leaving the house
-
-## Metadata
-
-- Created: 2022-4-12
-- Author: Amadeusz
-- Schema: 1
-
-## List
-
-- Power off
-  - Upstairs office power strip
-  - Downstairs office power strip
-  - TV power strip
-  - Shut off fireplace
-  - Check stove
-  - Check outdoor faucets
-- Plants
-  - Water the plants
-  - Move plants
-    - (condition) if person comes to water them
-- Cat
-  - Dry food
-  - Wet food: 1 can per 2 days
-  - Litter and litter box
-  - Bowls
-  - Brush
-  - Collar
-  - Bring to friend
-
-        ";
 }
