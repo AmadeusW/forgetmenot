@@ -6,13 +6,41 @@ public class ChecklistService
     ChecklistParser Parser {get; set;}
     List<Checklist> Checklists { get; set; }
     private const string ChecklistPath = @"C:\temp\checklists\";
+    private bool Initialized { get; set; }
 
     public ChecklistService(ChecklistParser parser)
     {
         this.Parser = parser;
     }
 
-    internal async Task<List<Checklist>> ReadChecklistsAsync()
+    public async Task<List<Checklist>> GetAllChecklistsAsync()
+    {
+        await this.EnsureInitialized();
+        return this.Checklists;
+    }
+
+    public async Task<Checklist> GetChecklistAsync(string title)
+    {
+        await this.EnsureInitialized();
+        return this.Checklists.Single(n => n.Title == title);
+    }
+
+    public async void SaveChecklist(Checklist checklist)
+    {
+        // Persist to non-volatile memory
+        //var serialized = this.Parser.Serialize(checklist);
+    }
+
+    private async Task EnsureInitialized()
+    {
+        if (!this.Initialized)
+        {
+            this.Checklists = await ReadChecklistsAsync();
+            this.Initialized = true;
+        }
+    }
+
+    private async Task<List<Checklist>> ReadChecklistsAsync()
     {
         var list = new List<Checklist>();
         var files = Directory.EnumerateFiles(ChecklistPath, "*.md");
@@ -24,10 +52,5 @@ public class ChecklistService
         }
         this.Checklists = list;
         return list;
-    }
-
-    public async Task<Checklist> GetChecklistAsync(string title)
-    {
-        return this.Checklists.Single(n => n.Title == title);
     }
 }

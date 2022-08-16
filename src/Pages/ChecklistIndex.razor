@@ -44,6 +44,6 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        checklists = await ChecklistService.ReadChecklistsAsync();
+        checklists = await ChecklistService.GetAllChecklistsAsync();
     }
 }
