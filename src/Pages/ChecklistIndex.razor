@@ -40,10 +40,10 @@ else
 }
 
 @code {
-    private ChecklistQuickView[]? checklists;
+    private List<Checklist> checklists;
 
     protected override async Task OnInitializedAsync()
     {
-        checklists = await ChecklistService.GetChecklistsAsync();
+        checklists = await ChecklistService.ReadChecklistsAsync();
     }
 }

@@ -1,13 +1,6 @@
-namespace forgetmenot.Model;
-using forgetmenot.Data;
-
+namespace forgetmenot.Data;
 public class ChecklistParser
 {
-    internal Task<string> LoadAsync(string path)
-    {
-        return Task.FromResult(SampleData);
-    }
-
     internal Task<Checklist> ParseAsync(string serialized)
     {
         string title = string.Empty;
@@ -29,54 +22,44 @@ public class ChecklistParser
             {
                 section = Section.Header;
                 title = titleCandidate;
+                continue;
             }
-            else if (line.Equals("## Metadata"))
-            {
-                section = Section.Metadata;
-            }
-            else if (line.Equals("## List"))
+
+            if (Matches(line, "-", out _))
             {
                 section = Section.List;
             }
-            else
-            {
-                if (section == Section.Metadata)
-                {
-                    if (Matches(line, "- Created:", out var dateCreatedCandidate))
-                    {
-                        dateCreated = DateTime.Parse(dateCreatedCandidate);
-                    }
-                    else if (Matches(line, "- Author:", out var authorCandidate))
-                    {
-                        author = authorCandidate;
-                    }
-                }
-                else if (section == Section.List)
-                {
-                    var indentSize = line.IndexOf('-');
-                    var itemName = line.Substring(indentSize + 1).TrimStart();
-                    var newItem = new ChecklistItem()
-                    {
-                        Name = itemName,
-                        IndentSize = indentSize,
-                    };
 
-                    if (indentSize > 0)
+            if (section == Section.Header)
+            {
+                summary += line;
+                continue;
+            }
+            else if (section == Section.List)
+            {
+                var indentSize = line.IndexOf('-');
+                var itemName = line.Substring(indentSize + 1).TrimStart();
+                var newItem = new ChecklistItem()
+                {
+                    Name = itemName,
+                    IndentSize = indentSize,
+                };
+
+                if (indentSize > 0)
+                {
+                    for (int previousIndentSize = indentSize - 1; previousIndentSize >= 0; previousIndentSize--)
                     {
-                        for (int previousIndentSize = indentSize - 1; previousIndentSize >= 0; previousIndentSize--)
+                        if (lastItemAtIndent.TryGetValue(previousIndentSize, out var previousItem))
                         {
-                            if (lastItemAtIndent.TryGetValue(previousIndentSize, out var previousItem))
-                            {
-                                newItem.ParentItem = previousItem;
-                                previousItem.HasChildItems = true;
-                                break;
-                            }
+                            newItem.ParentItem = previousItem;
+                            previousItem.HasChildItems = true;
+                            break;
                         }
                     }
-
-                    lastItemAtIndent[indentSize] = newItem;
-                    items.Add(newItem);
                 }
+
+                lastItemAtIndent[indentSize] = newItem;
+                items.Add(newItem);
             }
         }
 
@@ -84,8 +67,6 @@ public class ChecklistParser
         {
             Title = title,
             Summary = summary,
-            Author = author,
-            DateCreated = dateCreated,
             Items = items,
         });
     }
@@ -102,10 +83,10 @@ public class ChecklistParser
         return false;
     }
 
-    private enum Section {
+    private enum Section
+    {
         None,
         Header,
-        Metadata,
         List
     }
 

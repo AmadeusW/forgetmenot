@@ -1,36 +1,33 @@
 namespace forgetmenot.Data;
-using forgetmenot.Model;
 using Microsoft.AspNetCore.Components;
 
 public class ChecklistService
 {
     ChecklistParser Parser {get; set;}
+    List<Checklist> Checklists { get; set; }
+    private const string ChecklistPath = @"C:\temp\checklists\";
 
     public ChecklistService(ChecklistParser parser)
     {
         this.Parser = parser;
     }
 
-    public Task<ChecklistQuickView[]> GetChecklistsAsync()
+    internal async Task<List<Checklist>> ReadChecklistsAsync()
     {
-        return Task.FromResult(new[] { 
-            new ChecklistQuickView()
-            {
-                Title = "Max",
-                Summary = "What to bring for Max",
-            },
-            new ChecklistQuickView()
-            {
-                Title = "Vacation",
-                Summary = "Vacation todo",
-            },
-        });
+        var list = new List<Checklist>();
+        var files = Directory.EnumerateFiles(ChecklistPath, "*.md");
+        foreach (var filePath in files)
+        {
+            var raw = await File.ReadAllTextAsync(filePath);
+            var checklist = await this.Parser.ParseAsync(raw);
+            list.Add(checklist);
+        }
+        this.Checklists = list;
+        return list;
     }
 
     public async Task<Checklist> GetChecklistAsync(string title)
     {
-        var rawData = await Parser.LoadAsync(title);
-        var parsed = await Parser.ParseAsync(rawData);
-        return parsed;
+        return this.Checklists.Single(n => n.Title == title);
     }
 }

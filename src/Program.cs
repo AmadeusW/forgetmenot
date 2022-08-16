@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using forgetmenot.Data;
-using forgetmenot.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
