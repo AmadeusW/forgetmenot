@@ -27,8 +27,8 @@ public class ChecklistService
 
     public async void SaveChecklist(Checklist checklist)
     {
-        // Persist to non-volatile memory
-        //var serialized = this.Parser.Serialize(checklist);
+        var serialized = this.Parser.Serialize(checklist);
+        await File.WriteAllTextAsync(Path.Combine(ChecklistPath, checklist.Title + ".md"), serialized);
     }
 
     private async Task EnsureInitialized()

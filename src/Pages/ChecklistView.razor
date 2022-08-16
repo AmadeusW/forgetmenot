@@ -60,6 +60,7 @@ else
 
         RecursivelyUpdateParents(item);
         checklist.LastModified = DateTime.Now;
+        ChecklistService.SaveChecklist(this.checklist);
     }
 
     private void RecursivelyUpdateParents(ChecklistItem item)
