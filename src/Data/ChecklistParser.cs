@@ -1,17 +1,106 @@
 using System.Text;
+using Markdig;
+using Markdig.Syntax;
+using Markdig.Syntax.Inlines;
 
 namespace forgetmenot.Data;
 public class ChecklistParser
 {
-    internal Task<Checklist> ParseAsync(string serialized)
+    private readonly MarkdownPipeline parsePipeline;
+
+    public ChecklistParser()
+    {
+        this.parsePipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            //.UsePragmaLines()
+            .UsePreciseSourceLocation()
+            .UseYamlFrontMatter()
+            .UseEmphasisExtras()
+            .Build();
+    }
+
+    public Task<Checklist> ParseAsync(string serialized)
     {
         string title = string.Empty;
         string author = string.Empty;
         DateTime dateCreated = default;
         string summary = string.Empty;
-        List<ChecklistItem> items = new List<ChecklistItem>();
-        Dictionary<int, ChecklistItem> lastItemAtIndent = new Dictionary<int, ChecklistItem>();
 
+        var parsed = Markdown.Parse(serialized, parsePipeline);
+        var root = new ChecklistNode()
+        {
+            Parent = null,
+            Item = null,
+            Children = new List<ChecklistNode>(),
+        };
+        
+        foreach (var descendant in parsed.Descendants())
+        {
+            if (descendant is ListBlock listBlock)
+            {
+                var descendants = listBlock.Descendants().Select(n => GetText(n.Span)).ToList();
+                var children = listBlock.Select(n => GetText(n.Span)).ToList();
+                foreach (var child in listBlock)
+                {
+                    root.Children.Add(AddToTree(root, child));
+                }
+            }
+            else if (descendant is HeadingBlock headingBlock)
+            {
+                var descendants = headingBlock.Descendants().Select(n => GetText(n.Span)).ToList();
+
+                var text = GetText(headingBlock.Span);
+                var content = headingBlock.Inline.FirstChild;
+            }
+            else if (descendant is ParagraphBlock paragraphBlock)
+            {
+                var text = GetText(paragraphBlock.Span);
+            }
+            else if (descendant is ListItemBlock listItemBlock)
+            {
+                var text = GetText(listItemBlock.Span);
+            }
+        }
+
+        ChecklistNode AddToTree(ChecklistNode parent, Block block)
+        {
+            var listItemBlock = (ListItemBlock)block;
+            var node = new ChecklistNode()
+            {
+                Children = new List<ChecklistNode>(),
+                Parent = parent,
+            };
+
+            foreach (var child in listItemBlock)
+            {
+                if (child is ParagraphBlock paragraphBlock)
+                {
+                    node.Item = new ChecklistItem()
+                    {
+                        Name = GetText(paragraphBlock.Span),
+                    };
+                }
+                else if (child is ListBlock listBlock)
+                {
+                    foreach (var listChild in listBlock)
+                    {
+                        var childNode = AddToTree(node, listChild);
+                        node.Children.Add(childNode);
+                    }
+                }
+            }
+
+            return node;
+        }
+
+        string GetText(SourceSpan span)
+        {
+            return serialized.Substring(span.Start, span.Length);
+        }
+
+        //List<ChecklistItem> items = new List<ChecklistItem>();
+        //Dictionary<int, ChecklistItem> lastItemAtIndent = new Dictionary<int, ChecklistItem>();
+        /*
         var section = Section.None;
         foreach (var rawLine in serialized.Split('\n'))
         {
@@ -76,27 +165,27 @@ public class ChecklistParser
                 items.Add(newItem);
             }
         }
-
+        */
         return Task.FromResult(new Checklist()
         {
             Title = title,
             Summary = summary,
-            Items = items,
+            Items = root.Children,
         });
     }
 
     internal string Serialize(Checklist checklist)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"# {checklist.Title}");
-        sb.AppendLine(String.Empty);
-        sb.AppendLine(checklist.Summary);
-        sb.AppendLine(String.Empty);
-        foreach (var item in checklist.Items)
-        {
-            var box = item.Done ? "[x]" : "[ ]";
-            sb.AppendLine($"{new string(' ', item.IndentSize)}- {box} {item.Name}");
-        }
+        //sb.AppendLine($"# {checklist.Title}");
+        //sb.AppendLine(String.Empty);
+        //sb.AppendLine(checklist.Summary);
+        //sb.AppendLine(String.Empty);
+        //foreach (var item in checklist.Items)
+        //{
+        //    var box = item.Done ? "[x]" : "[ ]";
+        //    sb.AppendLine($"{new string(' ', item.IndentSize)}- {box} {item.Name}");
+        //}
         return sb.ToString();
     }
 

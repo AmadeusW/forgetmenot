@@ -20,11 +20,11 @@ else
         <tbody>
             @foreach (var item in checklist.Items)
             {
-                var capturedItem = item;
-                var prefix = new string(' ' /* non breakable space u+00a0 */, item.IndentSize);
+                var capturedItem = item.Item;
+                //var prefix = new string(' ' /* non breakable space u+00a0 */, capturedItem.IndentSize);
                 <tr>
                     <td @onclick="(e => ToggleItem(capturedItem))" >
-                        <span>@prefix @(item.Done ? "✅" : item.HasChildItems ? "🔽" : "⬛") @item.Name</span>
+                        <span>@(capturedItem.Done ? "✅" : item.Children.Any() ? "🔽" : "⬛") @capturedItem.Name</span>
                     </td>
                 </tr>
             }
@@ -32,7 +32,7 @@ else
     </table>
 
     <p><em>@checklist.Summary</em></p>
-    <p>Updated @checklist.LastModified by @checklist.LastModifiedBy</p>
+    <p>Updated @checklist.ModifiedDate by @checklist.ModifiedBy</p>
     <p>@status</p>
 }
 
@@ -50,6 +50,7 @@ else
 
     private void ToggleItem(ChecklistItem item)
     {
+        /*
         if (item.HasChildItems)
         {
             // Can't toggle these
@@ -61,10 +62,12 @@ else
         RecursivelyUpdateParents(item);
         checklist.LastModified = DateTime.Now;
         ChecklistService.SaveChecklist(this.checklist);
+        */
     }
 
     private void RecursivelyUpdateParents(ChecklistItem item)
     {
+        /*
         if (item.ParentItem is not null)
         {
             item.ParentItem.Done = checklist.Items
@@ -72,5 +75,6 @@ else
                 .All(n => n.Done);
             RecursivelyUpdateParents(item.ParentItem);
         }
+        */
     }
 }

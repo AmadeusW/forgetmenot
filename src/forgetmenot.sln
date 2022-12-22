@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32519.379
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "forgetmenot", "forgetmenot.csproj", "{4CE1A649-6EBC-4E36-974F-F0124B2B502F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "forgetmenot.test", "..\forgetmenot.test\forgetmenot.test.csproj", "{887EDB60-9365-4C1B-92D8-1458EFCF19AA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4CE1A649-6EBC-4E36-974F-F0124B2B502F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CE1A649-6EBC-4E36-974F-F0124B2B502F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CE1A649-6EBC-4E36-974F-F0124B2B502F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CE1A649-6EBC-4E36-974F-F0124B2B502F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{887EDB60-9365-4C1B-92D8-1458EFCF19AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{887EDB60-9365-4C1B-92D8-1458EFCF19AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{887EDB60-9365-4C1B-92D8-1458EFCF19AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{887EDB60-9365-4C1B-92D8-1458EFCF19AA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BB5B65D3-375D-4022-8E6A-248478F797B9}
+	EndGlobalSection
+EndGlobal

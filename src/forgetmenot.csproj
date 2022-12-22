@@ -7,4 +7,8 @@
     <UseRazorSourceGenerator>false</UseRazorSourceGenerator>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Markdig.Signed" Version="0.30.4" />
+  </ItemGroup>
+
 </Project>
