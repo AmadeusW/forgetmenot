@@ -24,7 +24,7 @@ Checklist summary
 - Item D
 
 ";
-            var parser = new ChecklistParser();
+            var parser = new MarkdownChecklistParser();
             var checklist = await parser.ParseAsync(rawData);
 
             Assert.Equal("Checklist title", checklist.Title);

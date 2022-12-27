@@ -20,11 +20,11 @@ else
         <tbody>
             @foreach (var item in checklist.Items)
             {
-                var capturedItem = item.Item;
+                var capturedItem = item; //.Item;
                 //var prefix = new string(' ' /* non breakable space u+00a0 */, capturedItem.IndentSize);
                 <tr>
                     <td @onclick="(e => ToggleItem(capturedItem))" >
-                        <span>@(capturedItem.Done ? "✅" : item.Children.Any() ? "🔽" : "⬛") @capturedItem.Name</span>
+                        <span>@(capturedItem.Done ? "✅" : "⬛") @capturedItem.Name</span>
                     </td>
                 </tr>
             }

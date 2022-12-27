@@ -9,7 +9,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<ChecklistService>();
-builder.Services.AddSingleton<ChecklistParser>();
+builder.Services.AddSingleton<IChecklistParser>((_) => new SimpleChecklistParser());
 
 var app = builder.Build();
 

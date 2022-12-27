@@ -4,11 +4,11 @@ using Markdig.Syntax;
 using Markdig.Syntax.Inlines;
 
 namespace forgetmenot.Data;
-public class ChecklistParser
+public class MarkdownChecklistParser : IChecklistParser
 {
     private readonly MarkdownPipeline parsePipeline;
 
-    public ChecklistParser()
+    public MarkdownChecklistParser()
     {
         this.parsePipeline = new MarkdownPipelineBuilder()
             .UseAdvancedExtensions()
@@ -51,10 +51,12 @@ public class ChecklistParser
 
                 var text = GetText(headingBlock.Span);
                 var content = headingBlock.Inline.FirstChild;
+                title = text;
             }
             else if (descendant is ParagraphBlock paragraphBlock)
             {
                 var text = GetText(paragraphBlock.Span);
+                summary = text;
             }
             else if (descendant is ListItemBlock listItemBlock)
             {
@@ -170,11 +172,11 @@ public class ChecklistParser
         {
             Title = title,
             Summary = summary,
-            Items = root.Children,
+            //Items = root.Children,
         });
     }
 
-    internal string Serialize(Checklist checklist)
+    public string Serialize(Checklist checklist)
     {
         var sb = new StringBuilder();
         //sb.AppendLine($"# {checklist.Title}");

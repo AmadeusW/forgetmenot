@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Components;
 
 public class ChecklistService
 {
-    ChecklistParser Parser {get; set;}
+    IChecklistParser Parser {get; set;}
     List<Checklist> Checklists { get; set; }
-    private const string ChecklistPath = @"C:\temp\checklists\";
+    private const string ChecklistPath = @"C:\src\forgetmenot\";
     private bool Initialized { get; set; }
 
-    public ChecklistService(ChecklistParser parser)
+    public ChecklistService(IChecklistParser parser)
     {
         this.Parser = parser;
     }

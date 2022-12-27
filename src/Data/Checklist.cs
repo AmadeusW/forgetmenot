@@ -9,7 +9,7 @@ public class Checklist
     public string Summary { get; set; }
     public DateTime ModifiedDate { get; set; }
     public string ModifiedBy { get; set; }
-    public List<ChecklistNode> Items { get; set; } // Serialized as flat list
+    public List<ChecklistItem> Items { get; set; } // Serialized as flat list
 }
 
 [DebuggerDisplay("{Name}")]
