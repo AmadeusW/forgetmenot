@@ -5,11 +5,13 @@ namespace forgetmenot.Data;
 [DebuggerDisplay("{Title}")]
 public class Checklist
 {
+    public ChecklistId Id {get; set;}
+    public ChecklistState State {get; set;}
     public string Title {get; set;}
     public string Summary { get; set; }
     public DateTime ModifiedDate { get; set; }
     public string ModifiedBy { get; set; }
-    public List<ChecklistItem> Items { get; set; } // Serialized as flat list
+    public List<ChecklistItem> Items { get; set; }
 }
 
 [DebuggerDisplay("{Name}")]
@@ -17,11 +19,26 @@ public class ChecklistItem
 {
     public string Name { get; set; }
     public bool Done {get; set;}
+    public DateTime ModifiedTime {get; set;}
+    public string ModifiedId {get; set;}
 }
 
-public class ChecklistNode
+[DebuggerDisplay("+{Checklist.Title}")]
+public class EmbeddedChecklistItem : ChecklistItem
 {
-    public ChecklistItem Item { get; set; }
-    public ChecklistNode Parent { get; set; }
-    public List<ChecklistNode> Children { get; set; }
+    public ChecklistId ChecklistId {get; set;}
+    public Checklist Checklist {get; }
+}
+
+[DebuggerDisplay("Checklist {TopicID}@{Version}")]
+public class ChecklistId
+{
+    public string TopicId {get; set;}
+    public int Version {get;set;}
+}
+
+public class ChecklistState
+{
+    public bool IsFeatured {get; set;}
+    public bool IsPrototype {get; set;}
 }

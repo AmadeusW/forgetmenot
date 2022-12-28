@@ -8,29 +8,25 @@ namespace forgetmenot.test
         public async Task CompleteParseAsync()
         {
             var rawData = @"
-===
-Author: author name
-Last modified: 2022-11-09
-===
-
 # Checklist title
+
 Checklist summary
 
 - Item A
 - Item B
 - Item C
-  - Item C1
-  - Item C2
 - Item D
 
 ";
-            var parser = new MarkdownChecklistParser();
+            var parser = new SimpleChecklistParser();
             var checklist = await parser.ParseAsync(rawData);
 
             Assert.Equal("Checklist title", checklist.Title);
             Assert.Equal("Checklist summary", checklist.Summary);
-            Assert.Equal(DateTime.Parse("2022-11-09"), checklist.ModifiedDate);
-            Assert.Equal("author name", checklist.ModifiedBy);
+            Assert.NotNull(checklist.Items.Single(n => n.Name == "Item A"));
+            Assert.NotNull(checklist.Items.Single(n => n.Name == "Item B"));
+            Assert.NotNull(checklist.Items.Single(n => n.Name == "Item C"));
+            Assert.NotNull(checklist.Items.Single(n => n.Name == "Item D"));
         }
     }
 }

@@ -27,12 +27,6 @@ public class MarkdownChecklistParser : IChecklistParser
         string summary = string.Empty;
 
         var parsed = Markdown.Parse(serialized, parsePipeline);
-        var root = new ChecklistNode()
-        {
-            Parent = null,
-            Item = null,
-            Children = new List<ChecklistNode>(),
-        };
         
         foreach (var descendant in parsed.Descendants())
         {
@@ -42,7 +36,7 @@ public class MarkdownChecklistParser : IChecklistParser
                 var children = listBlock.Select(n => GetText(n.Span)).ToList();
                 foreach (var child in listBlock)
                 {
-                    root.Children.Add(AddToTree(root, child));
+                    //root.Children.Add(AddToTree(root, child));
                 }
             }
             else if (descendant is HeadingBlock headingBlock)
@@ -63,7 +57,7 @@ public class MarkdownChecklistParser : IChecklistParser
                 var text = GetText(listItemBlock.Span);
             }
         }
-
+/*
         ChecklistNode AddToTree(ChecklistNode parent, Block block)
         {
             var listItemBlock = (ListItemBlock)block;
@@ -94,7 +88,7 @@ public class MarkdownChecklistParser : IChecklistParser
 
             return node;
         }
-
+*/
         string GetText(SourceSpan span)
         {
             return serialized.Substring(span.Start, span.Length);

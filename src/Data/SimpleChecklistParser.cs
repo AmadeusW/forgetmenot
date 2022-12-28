@@ -79,6 +79,11 @@ public class SimpleChecklistParser : IChecklistParser
             Items = items,
             Title = title,
             Summary = summary,
+            Id = new ChecklistId() 
+            {
+                TopicId = title,
+                Version = 1,
+            }
         });
     }
 
