@@ -10,6 +10,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<ChecklistService>();
 builder.Services.AddSingleton<IChecklistParser>((_) => new SimpleChecklistParser());
+builder.Services.AddSingleton<IStateRepositoryProvider>((_) => new SimpleStateRepositoryProvider());
 
 var app = builder.Build();
 

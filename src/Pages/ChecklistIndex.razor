@@ -1,4 +1,5 @@
 ﻿@page "/checklists/{Kind}"
+@page "/checklists"
 
 <PageTitle>Checklists</PageTitle>
 
@@ -55,7 +56,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        checklists = Kind switch
+        checklists = (Kind ?? "prototypes") switch
         {
             "prototypes" => await ChecklistService.GetPrototypeChecklistsAsync(),
             _ => await ChecklistService.GetFeaturedChecklistsAsync(),
