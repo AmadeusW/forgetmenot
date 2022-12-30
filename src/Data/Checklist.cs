@@ -6,7 +6,6 @@ namespace forgetmenot.Data;
 public class Checklist
 {
     public ChecklistId Id {get; set;}
-    public ChecklistState State {get; set;}
     public string Title {get; set;}
     public string Summary { get; set; }
     public DateTime ModifiedDate { get; set; }
@@ -27,18 +26,33 @@ public class ChecklistItem
 public class EmbeddedChecklistItem : ChecklistItem
 {
     public ChecklistId ChecklistId {get; set;}
-    public Checklist Checklist {get; }
 }
 
-[DebuggerDisplay("Checklist {TopicID}@{Version}")]
+[DebuggerDisplay("Checklist {TopicId}@{Version}")]
 public class ChecklistId
 {
     public string TopicId {get; set;}
     public int Version {get;set;}
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is not ChecklistId other)
+        {
+            return false;
+        }
+        return this.TopicId == other.TopicId && this.Version == other.Version;
+    }
 }
 
-public class ChecklistState
+[DebuggerDisplay("Checklist+ {TopicID}@{Version}")]
+public class ChecklistWithState
 {
-    public bool IsFeatured {get; set;}
-    public bool IsPrototype {get; set;}
+    public bool IsFeatured { get; set; }
+    public bool IsPrototype { get; set; }
+    public ChecklistId Identifier { get; set; }
+}
+
+public class ChecklistRepository : List<ChecklistWithState>
+{
+
 }

@@ -1,23 +1,36 @@
 namespace forgetmenot.Data;
+
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Components;
 
 public class ChecklistService
 {
-    IChecklistParser Parser {get; set;}
+    private readonly IChecklistParser Parser;
+    private readonly IStateRepositoryProvider RepositoryProvider;
+
     List<Checklist> Checklists { get; set; }
 
-    private const string ChecklistPath = @"C:\src\forgetmenot\";
+    internal const string ChecklistPath = @"C:\src\forgetmenot\";
     private bool Initialized { get; set; }
+    public IList<Checklist> Prototypes { get; private set; }
+    public IList<Checklist> Featured { get; private set; }
 
-    public ChecklistService(IChecklistParser parser)
+    public ChecklistService(IChecklistParser parser, IStateRepositoryProvider repositoryProvider)
     {
         this.Parser = parser;
+        this.RepositoryProvider = repositoryProvider;
     }
 
-    public async Task<List<Checklist>> GetAllChecklistsAsync()
+    public async Task<IList<Checklist>> GetPrototypeChecklistsAsync()
     {
         await this.EnsureInitialized();
-        return this.Checklists;
+        return this.Prototypes;
+    }
+
+    public async Task<IList<Checklist>> GetFeaturedChecklistsAsync()
+    {
+        await this.EnsureInitialized();
+        return this.Featured;
     }
 
     public async Task<Checklist> GetChecklistAsync(string topicId, int version = -1)
@@ -37,7 +50,7 @@ public class ChecklistService
     public async void SaveChecklist(Checklist checklist)
     {
         var serialized = this.Parser.Serialize(checklist);
-        await File.WriteAllTextAsync(Path.Combine(ChecklistPath, checklist.Title + ".md"), serialized);
+        await File.WriteAllTextAsync(Path.Combine(ChecklistPath, checklist.Id.TopicId + "-" + checklist.Id.Version + ".md"), serialized);
     }
 
     private async Task EnsureInitialized()
@@ -45,6 +58,12 @@ public class ChecklistService
         if (!this.Initialized)
         {
             this.Checklists = await ReadChecklistsAsync();
+            await this.RepositoryProvider.InitializeAsync(this.Checklists);
+            var checklistState = await this.RepositoryProvider.GetStateAsync();
+            var prototypeIds = checklistState.Where(n => n.IsPrototype);
+            var featuredIds = checklistState.Where(n => n.IsFeatured);
+            this.Prototypes = this.Checklists.Where(n => prototypeIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
+            this.Featured = this.Checklists.Where(n => featuredIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
             this.Initialized = true;
         }
     }
@@ -63,6 +82,20 @@ public class ChecklistService
         return list;
     }
 
+    public Checklist GetChecklist(ChecklistId identifier)
+    {
+        var matchingTopic = this.Checklists.Where(n => n.Id.TopicId == identifier.TopicId);
+        if (identifier.Version == -1)
+        {
+            var largestVersion = matchingTopic.Max(n => n.Id.Version);
+            return matchingTopic.Single(n => n.Id.Version == largestVersion);
+        }
+        else
+        {
+            return matchingTopic.First(n => n.Id.Version == identifier.Version);
+        }
+    }
+
     internal void ToggleItem(Checklist checklist, ChecklistItem item)
     {
         item.Done = !item.Done;
@@ -77,11 +110,11 @@ public class ChecklistService
         bool hasTarget = false;
         foreach (var item in checklist.Items.Where(n => n is EmbeddedChecklistItem))
         {
-            var embeddedItem = (EmbeddedChecklistItem)item;
-            var thisHasTarget = FindAndUpdateParents(embeddedItem.Checklist, targetItem);
+            var embeddedChecklist = GetChecklist(((EmbeddedChecklistItem)item).ChecklistId);
+            var thisHasTarget = FindAndUpdateParents(embeddedChecklist, targetItem);
             if (thisHasTarget)
             {
-                embeddedItem.Done = embeddedItem.Checklist.Items.All(n => n.Done);
+                item.Done = embeddedChecklist.Items.All(n => n.Done);
             }
             hasTarget |= thisHasTarget;
         }

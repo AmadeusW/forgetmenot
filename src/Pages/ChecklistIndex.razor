@@ -1,4 +1,4 @@
-﻿@page "/checklists"
+﻿@page "/checklists/{Kind}"
 
 <PageTitle>Checklists</PageTitle>
 
@@ -18,21 +18,29 @@ else
             <tr>
                 <th>Title</th>
                 <th>Summary</th>
+                <th>Last modified</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var checklist in checklists)
             {
+                string suffix = string.Empty;
+                if (Kind == "prototypes")
+                {
+                    suffix = " v." + checklist.Id.Version;
+                }
+
                 <tr>
                     <td>
                         @{
                             var link = $"checklist/{checklist.Title}";
                         }
                         <NavLink class="nav-link" href="@link">
-                            @checklist.Title
+                            @checklist.Title @suffix
                         </NavLink>
                     </td>
                     <td>@checklist.Summary</td>
+                    <td>@checklist.ModifiedDate by @checklist.ModifiedBy</td>
                 </tr>
             }
         </tbody>
@@ -40,10 +48,17 @@ else
 }
 
 @code {
-    private List<Checklist> checklists;
+    [Parameter]
+    public string? Kind {get; set;}
+
+    private IList<Checklist> checklists;
 
     protected override async Task OnInitializedAsync()
     {
-        checklists = await ChecklistService.GetAllChecklistsAsync();
+        checklists = Kind switch
+        {
+            "prototypes" => await ChecklistService.GetPrototypeChecklistsAsync(),
+            _ => await ChecklistService.GetFeaturedChecklistsAsync(),
+        };
     }
 }

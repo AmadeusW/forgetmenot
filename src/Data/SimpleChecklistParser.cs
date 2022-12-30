@@ -9,6 +9,10 @@ public class SimpleChecklistParser : IChecklistParser
         Dictionary<int, ChecklistItem> lastItemAtIndent = new Dictionary<int, ChecklistItem>();
         string title = string.Empty;
         string summary = string.Empty;
+        string identifier = string.Empty;
+        string modifiedBy = string.Empty;
+        DateTime modifiedDate = default;
+        int version = 0;
         
         var section = Section.None;
         foreach (var rawLine in serialized.Split('\n'))
@@ -18,16 +22,29 @@ public class SimpleChecklistParser : IChecklistParser
             {
                 continue;
             }
-            if (Matches(line, "# ", out var titleCandidate))
+            else if (Matches(line, "# ", out var titleCandidate))
             {
                 section = Section.Header;
                 title = titleCandidate;
                 continue;
             }
-
-            if (Matches(line, "-", out _))
+            else if (Matches(line, "-", out _))
             {
                 section = Section.List;
+            }
+            else if (Matches(line, "$", out var identifierData))
+            {
+                var parts = identifierData.Split('@');
+                identifier = parts[0];
+                version = Int32.Parse(parts[1]);
+                continue;
+            }
+            else if (Matches(line, "!", out var modifiedData))
+            {
+                var parts = modifiedData.Split('@');
+                modifiedBy = parts[0];
+                modifiedDate = DateTime.Parse(parts[1]);
+                continue;
             }
 
             if (section == Section.Header)
@@ -49,31 +66,37 @@ public class SimpleChecklistParser : IChecklistParser
                 {
                     itemName = itemName.Substring(3).TrimStart();
                 }
+                else if (itemName.StartsWith('+'))
+                {
+                    var embeddedId = itemName.Substring(1).TrimStart();
+                    var parts = embeddedId.Split('@');
+                    int embeddedVersion = -1;
+                    var topicId = parts[0];
+                    if (parts.Length > 0)
+                    {
+                        embeddedVersion = Int32.Parse(parts[1]);
+                    }
+                    var newEmbeddedItem = new EmbeddedChecklistItem()
+                    {
+                        ChecklistId = new ChecklistId()
+                        {
+                            TopicId = topicId,
+                            Version = embeddedVersion,
+                        },
+                    };
+                    items.Add(newEmbeddedItem);
+                    continue;
+                }
 
                 var newItem = new ChecklistItem()
                 {
                     Name = itemName,
-                    //IndentSize = indentSize,
                     Done = done
                 };
-/*
-                if (indentSize > 0)
-                {
-                    for (int previousIndentSize = indentSize - 1; previousIndentSize >= 0; previousIndentSize--)
-                    {
-                        if (lastItemAtIndent.TryGetValue(previousIndentSize, out var previousItem))
-                        {
-                            newItem.ParentItem = previousItem;
-                            previousItem.HasChildItems = true;
-                            break;
-                        }
-                    }
-                }
-*/
-                lastItemAtIndent[indentSize] = newItem;
                 items.Add(newItem);
             }
         }
+
         return Task.FromResult(new Checklist()
         {
             Items = items,
@@ -83,7 +106,7 @@ public class SimpleChecklistParser : IChecklistParser
             {
                 TopicId = title,
                 Version = 1,
-            }
+            },
         });
     }
 
@@ -96,10 +119,18 @@ public class SimpleChecklistParser : IChecklistParser
         sb.AppendLine(String.Empty);
         foreach (var item in checklist.Items)
         {
+            if (item is EmbeddedChecklistItem embeddedItem)
+            {
+                sb.AppendLine($"- +{embeddedItem.ChecklistId.TopicId}@{embeddedItem.ChecklistId.Version}");
+                continue;
+            }
             var box = item.Done ? "[x]" : "[ ]";
             //sb.AppendLine($"{new string(' ', item.IndentSize)}- {box} {item.Name}");
             sb.AppendLine($"- {box} {item.Name}");
         }
+        sb.AppendLine(String.Empty);
+        sb.AppendLine($"${checklist.Id.TopicId}@{checklist.Id.Version}");
+        sb.AppendLine($"!{checklist.ModifiedBy}@{checklist.ModifiedDate}");
         return sb.ToString();
     }
 
