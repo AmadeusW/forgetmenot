@@ -26,18 +26,25 @@ else
             @foreach (var checklist in checklists)
             {
                 string suffix = string.Empty;
-                if (Kind == "prototypes")
+                if (Kind == "archetypes")
                 {
-                    suffix = " v." + checklist.Id.Version;
+                    //suffix = " v." + checklist.Id.Version;
+                }
+                string uiParameters = string.Empty;
+                string linkParameters = string.Empty;
+                if (ChecklistService.Archetypes.Any(n => n.Id.Equals(checklist.Id)))
+                {
+                    uiParameters = "[archetype]";
+                    linkParameters = "/archetype";
                 }
 
                 <tr>
                     <td>
                         @{
-                            var link = $"checklist/{checklist.Title}";
+                            var link = $"checklist/{checklist.Id.TopicId}{linkParameters}";
                         }
                         <NavLink class="nav-link" href="@link">
-                            @checklist.Title @suffix
+                            @checklist.Title @suffix @uiParameters
                         </NavLink>
                     </td>
                     <td>@checklist.Summary</td>
@@ -56,10 +63,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        checklists = (Kind ?? "prototypes") switch
+        checklists = (Kind ?? "") switch
         {
-            "prototypes" => await ChecklistService.GetPrototypeChecklistsAsync(),
-            _ => await ChecklistService.GetFeaturedChecklistsAsync(),
+            "archetypes" => await ChecklistService.GetPrototypeChecklistsAsync(),
+            "featured" => await ChecklistService.GetFeaturedChecklistsAsync(),
+            _ => await ChecklistService.GetAllChecklistsAsync(),
         };
     }
 }

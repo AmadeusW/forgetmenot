@@ -1,4 +1,5 @@
 ﻿@page "/checklist/{Title}"
+@page "/checklist/{Title}/{Variant}"
 
 <PageTitle>Checklist</PageTitle>
 
@@ -40,12 +41,25 @@ else
     [Parameter]
     public string? Title {get; set;}
 
+    [Parameter]
+    public string? Variant { get; set; }
+
     private Checklist? checklist;
     private string status;
 
     protected override async Task OnInitializedAsync()
     {
-        checklist = await ChecklistService.GetChecklistAsync(Title);
+        int version = -1; // latest
+        bool useArchetype = false;
+        if (Int32.TryParse(Variant, out var variantVersion))
+        {
+            version = variantVersion;
+        }
+        else if (Variant == "archetype")
+        {
+            useArchetype = true;
+        }
+        checklist = await ChecklistService.GetChecklistAsync(Title, useArchetype, version);
     }
 
     private void ToggleItem(ChecklistItem item)

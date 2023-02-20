@@ -8,12 +8,12 @@ public class ChecklistService
     private readonly IChecklistParser Parser;
     private readonly IStateRepositoryProvider RepositoryProvider;
 
-    List<Checklist> Checklists { get; set; }
+    List<Checklist> AllChecklists { get; set; }
 
-    internal const string ChecklistPath = @"C:\src\forgetmenot\";
+    internal const string ChecklistPath = @"C:\src\forgetmenot\checklists";
     private bool Initialized { get; set; }
-    public IList<Checklist> Prototypes { get; private set; }
-    public IList<Checklist> Featured { get; private set; }
+    public IList<Checklist> Archetypes { get; private set; }
+    public IList<Checklist> FeaturedLists { get; private set; }
 
     public ChecklistService(IChecklistParser parser, IStateRepositoryProvider repositoryProvider)
     {
@@ -24,19 +24,26 @@ public class ChecklistService
     public async Task<IList<Checklist>> GetPrototypeChecklistsAsync()
     {
         await this.EnsureInitialized();
-        return this.Prototypes;
+        return this.Archetypes;
     }
 
     public async Task<IList<Checklist>> GetFeaturedChecklistsAsync()
     {
         await this.EnsureInitialized();
-        return this.Featured;
+        return this.FeaturedLists;
     }
 
-    public async Task<Checklist> GetChecklistAsync(string topicId, int version = -1)
+    public async Task<IList<Checklist>> GetAllChecklistsAsync()
     {
         await this.EnsureInitialized();
-        var matchingTopic = this.Checklists.Where(n => n.Id.TopicId == topicId);
+        return this.AllChecklists;
+    }
+
+    public async Task<Checklist> GetChecklistAsync(string topicId, bool useArchetype, int version = -1)
+    {
+        await this.EnsureInitialized();
+        var source = useArchetype ? this.Archetypes : this.FeaturedLists;
+        var matchingTopic = source.Where(n => n.Id.TopicId == topicId);
         if (version == -1)
         {
             return matchingTopic.OrderByDescending(n => n.Id.Version).First();
@@ -49,21 +56,27 @@ public class ChecklistService
 
     public async void SaveChecklist(Checklist checklist)
     {
+        // Assuming this is not a prototype
+        // note: the Checklist needs to declare within itself what it is, e.g. a prototype
         var serialized = this.Parser.Serialize(checklist);
-        await File.WriteAllTextAsync(Path.Combine(ChecklistPath, checklist.Id.TopicId + "-" + checklist.Id.Version + ".md"), serialized);
+        var filePath = string.IsNullOrEmpty(checklist.Id.FilePath)
+            ? "lists\\" + checklist.Id.TopicId + "-" + checklist.Id.Version + ".md"
+            : checklist.Id.FilePath;
+        await File.WriteAllTextAsync(Path.Combine(ChecklistPath, filePath), serialized);
     }
 
     private async Task EnsureInitialized()
     {
         if (!this.Initialized)
         {
-            this.Checklists = await ReadChecklistsAsync();
-            await this.RepositoryProvider.InitializeAsync(this.Checklists);
+            this.AllChecklists = await ReadChecklistsAsync();
+            await this.RepositoryProvider.InitializeAsync(this.AllChecklists);
             var checklistState = await this.RepositoryProvider.GetStateAsync();
             var prototypeIds = checklistState.Where(n => n.IsPrototype);
-            var featuredIds = checklistState.Where(n => n.IsFeatured);
-            this.Prototypes = this.Checklists.Where(n => prototypeIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
-            this.Featured = this.Checklists.Where(n => featuredIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
+            var listIds = checklistState.Where(n => !n.IsPrototype);
+            // TODO: this information should be embedded within checklists, and not in state.
+            this.Archetypes = this.AllChecklists.Where(n => prototypeIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
+            this.FeaturedLists = this.AllChecklists.Where(n => listIds.Any(s => s.Identifier.Equals(n.Id))).ToList();
             this.Initialized = true;
         }
     }
@@ -71,20 +84,30 @@ public class ChecklistService
     private async Task<List<Checklist>> ReadChecklistsAsync()
     {
         var list = new List<Checklist>();
-        var files = Directory.EnumerateFiles(ChecklistPath, "*.md");
+        var files = Directory.EnumerateFiles(ChecklistPath, "*.md", SearchOption.AllDirectories);
         foreach (var filePath in files)
         {
             var raw = await File.ReadAllTextAsync(filePath);
             var checklist = await this.Parser.ParseAsync(raw);
+            checklist.Id.FilePath = Path.GetRelativePath(ChecklistPath, filePath);
             list.Add(checklist);
         }
-        this.Checklists = list;
+        this.AllChecklists = list;
         return list;
     }
 
     public Checklist GetChecklist(ChecklistId identifier)
     {
-        var matchingTopic = this.Checklists.Where(n => n.Id.TopicId == identifier.TopicId);
+        if (!string.IsNullOrEmpty(identifier.FilePath))
+        {
+            var matchingFile = this.AllChecklists.SingleOrDefault(n => n.Id.FilePath == identifier.FilePath);
+            if (matchingFile is not null)
+            {
+                return matchingFile;
+            }
+        }
+
+        var matchingTopic = this.AllChecklists.Where(n => n.Id.TopicId == identifier.TopicId);
         if (identifier.Version == -1)
         {
             var largestVersion = matchingTopic.Max(n => n.Id.Version);

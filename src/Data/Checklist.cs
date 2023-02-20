@@ -33,12 +33,17 @@ public class ChecklistId
 {
     public string TopicId {get; set;}
     public int Version {get;set;}
+    public string FilePath { get; set; }
 
     public override bool Equals(object? obj)
     {
         if (obj is not ChecklistId other)
         {
             return false;
+        }
+        if (this.FilePath is not null && other.FilePath is not null)
+        {
+            return this.FilePath.Equals(other.FilePath);
         }
         return this.TopicId == other.TopicId && this.Version == other.Version;
     }

@@ -20,6 +20,7 @@ public class SimpleStateRepositoryProvider : IStateRepositoryProvider
         {
             return;
         }
+        // Initializes state from scratch, when no existing state is available
 
         var newState = new ChecklistRepository();
         foreach (var checklist in checklists)
@@ -27,10 +28,36 @@ public class SimpleStateRepositoryProvider : IStateRepositoryProvider
             newState.Add(new ChecklistWithState()
             {
                 Identifier = checklist.Id,
-                IsPrototype = true,
+                IsPrototype = false, // this information should be in the checklist.
                 IsFeatured = false,
             });
         }
+
+        await this.SetStateAsync(newState);
+    }
+
+    private async Task UpdateStateAsync(IList<Checklist> currentChecklists)
+    {
+        var newState = new ChecklistRepository();
+        foreach (var checklist in currentChecklists)
+        {
+            var existingState = await this.GetStateAsync();
+            var matchingExistingChecklist = existingState.FirstOrDefault(n => n.Identifier.Equals(checklist.Id));
+            if (matchingExistingChecklist is not null)
+            {
+                newState.Add(matchingExistingChecklist);
+            }
+            else
+            {
+                newState.Add(new ChecklistWithState()
+                {
+                    Identifier = checklist.Id,
+                    IsPrototype = false, // this information should be in the checklist.
+                    IsFeatured = false,
+                });
+            }
+        }
+
         await this.SetStateAsync(newState);
     }
 
