@@ -11,6 +11,10 @@ public class Checklist
     public DateTime ModifiedDate { get; set; }
     public string ModifiedBy { get; set; }
     public List<ChecklistItem> Items { get; set; }
+
+    // Changed since last save?
+    public bool ItemsChanged { get; set; }
+    public bool NextItemChangeWillIncrementVersion { get; set; }
 }
 
 [DebuggerDisplay("{Name}")]
@@ -22,7 +26,13 @@ public class ChecklistItem
     public string ModifiedId {get; set;}
 }
 
-[DebuggerDisplay("+{Checklist.Title}")]
+[DebuggerDisplay("+{Name}")]
+public class ParentChecklistItem : ChecklistItem
+{
+    public List<ChecklistItem> Items { get; set; }
+}
+
+[DebuggerDisplay(">{ChecklistId.Title}")]
 public class EmbeddedChecklistItem : ChecklistItem
 {
     public ChecklistId ChecklistId {get; set;}
@@ -49,7 +59,7 @@ public class ChecklistId
     }
 }
 
-[DebuggerDisplay("Checklist+ {TopicID}@{Version}")]
+[DebuggerDisplay("Checklist+ {Identifier}")]
 public class ChecklistWithState
 {
     public bool IsFeatured { get; set; }

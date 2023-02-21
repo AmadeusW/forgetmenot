@@ -56,8 +56,12 @@ public class ChecklistService
 
     public async void SaveChecklist(Checklist checklist)
     {
-        // Assuming this is not a prototype
-        // note: the Checklist needs to declare within itself what it is, e.g. a prototype
+        if (checklist.ItemsChanged && checklist.NextItemChangeWillIncrementVersion)
+        {
+            checklist.Id.Version++;
+            checklist.NextItemChangeWillIncrementVersion = false;
+            checklist.ItemsChanged = false;
+        }
         var serialized = this.Parser.Serialize(checklist);
         var filePath = string.IsNullOrEmpty(checklist.Id.FilePath)
             ? "lists\\" + checklist.Id.TopicId + "-" + checklist.Id.Version + ".md"
@@ -125,6 +129,7 @@ public class ChecklistService
 
         FindAndUpdateParents(checklist, item);
         checklist.ModifiedDate = DateTime.Now;
+        checklist.NextItemChangeWillIncrementVersion = true;
         SaveChecklist(checklist);
     }
 
