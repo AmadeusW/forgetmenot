@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Text;
 
 namespace forgetmenot.Data;
@@ -11,9 +15,12 @@ public class SimpleChecklistParser : IChecklistParser
         string summary = string.Empty;
         string identifier = string.Empty;
         string modifiedBy = string.Empty;
+        bool isPrototype = false;
         DateTime modifiedDate = default;
         int version = 0;
-        
+        ParentChecklistItem? currentNestedItem = null;
+
+
         var section = Section.None;
         foreach (var rawLine in serialized.Split('\n'))
         {
@@ -31,6 +38,18 @@ public class SimpleChecklistParser : IChecklistParser
             else if (Matches(line, "-", out _))
             {
                 section = Section.List;
+            }
+            else if (Matches(line, "|", out var keyValuePair))
+            {
+                var parts = keyValuePair.Split('|');
+                var key = parts[0].Trim();
+                var value = parts[1].Trim();
+                switch (key) {
+                    case "moniker": identifier = value; break;
+                    case "version": version = Int32.Parse(value); break;
+                    case "modifiedBy": modifiedBy = value; break;
+                    case "modifiedDate": modifiedDate = DateTime.Parse(value); break;
+                }
             }
             else if (Matches(line, "$", out var identifierData))
             {
@@ -88,11 +107,41 @@ public class SimpleChecklistParser : IChecklistParser
                     continue;
                 }
 
-                var newItem = new ChecklistItem()
+                ChecklistItem newItem;
+                if (itemName.EndsWith(':'))
                 {
-                    Name = itemName,
-                    Done = done
-                };
+                    var newNestedItem = new ParentChecklistItem()
+                    {
+                        Name = itemName,
+                        Done = done,
+                        Items = new List<ChecklistItem>(),
+                    };
+                    currentNestedItem = newNestedItem;
+                    newItem = newNestedItem;
+                }
+                else
+                {
+                    newItem = new ChecklistItem()
+                    {
+                        Name = itemName,
+                        Done = done
+                    };
+
+                    if (indentSize == 0)
+                    {
+                        currentNestedItem = null;
+                    }
+                    else
+                    {
+                        Debug.Assert(currentNestedItem is not null, "Indented item has no parent that ends with ':'");
+                        if (currentNestedItem is not null)
+                        {
+                            currentNestedItem.Items.Add(newItem);
+                            continue;
+                        }
+                    }
+                }
+
                 items.Add(newItem);
             }
         }
@@ -102,7 +151,7 @@ public class SimpleChecklistParser : IChecklistParser
             Items = items,
             Title = title,
             Summary = summary,
-            Id = new ChecklistId() 
+            Id = new ChecklistId()
             {
                 TopicId = title,
                 Version = 1,

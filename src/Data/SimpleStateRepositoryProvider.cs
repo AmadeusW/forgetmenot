@@ -28,7 +28,7 @@ public class SimpleStateRepositoryProvider : IStateRepositoryProvider
             newState.Add(new ChecklistWithState()
             {
                 Identifier = checklist.Id,
-                IsPrototype = false, // this information should be in the checklist.
+                IsPrototype = false,
                 IsFeatured = false,
             });
         }

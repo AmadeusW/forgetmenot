@@ -1,5 +1,6 @@
 [
     {"IsFeatured":false,"IsPrototype":true,"Identifier":{"TopicId":"Max trip overnight","Version":1,"FilePath":"archetypes\\max.md"}},
     {"IsFeatured":false,"IsPrototype":false,"Identifier":{"TopicId":"Max trip overnight","Version":1,"FilePath":"lists\\Max trip overnight.md"}},
+    {"IsFeatured":true,"IsPrototype":false,"Identifier":{"TopicId":"Zoe birth","Version":1,"FilePath":"lists\\Zoe birth.md"}},
     {"IsFeatured":false,"IsPrototype":true,"Identifier":{"TopicId":"Vacation","Version":1,"FilePath":"archetypes\\vacation.md"}}
 ]

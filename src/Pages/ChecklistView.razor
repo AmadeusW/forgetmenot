@@ -21,13 +21,28 @@ else
         <tbody>
             @foreach (var item in checklist.Items)
             {
+                // Capture item so that it can be used in the event handler
                 var capturedItem = item; //.Item;
-                //var prefix = new string(' ' /* non breakable space u+00a0 */, capturedItem.IndentSize);
                 <tr>
                     <td @onclick="(e => ToggleItem(capturedItem))" >
                         <span>@(capturedItem.Done ? "✅" : "⬛") @capturedItem.Name</span>
                     </td>
                 </tr>
+
+                if (item is ParentChecklistItem parentChecklistItem)
+                {
+                    foreach (var childItem in parentChecklistItem.Items)
+                    {
+                        // Capture item so that it can be used in the event handler
+                        var capturedItem2 = childItem;
+                        var prefix = new string(' ' /* non breakable space u+00a0 */, 4);
+                        <tr>
+                            <td @onclick="(e => ToggleItem(capturedItem2))">
+                                <span>@prefix @(capturedItem2.Done ? "✅" : "⬛") @capturedItem2.Name</span>
+                            </td>
+                        </tr>
+                    }
+                }
             }
         </tbody>
     </table>
